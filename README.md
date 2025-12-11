@@ -13,81 +13,80 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 - [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
 - [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
 
+# KDT APK Analyzer
+
+간단한 APK 정적·동적 분석 도구 모음입니다. 이 저장소는 MobSF(Mobile Security Framework)과 연동하여 APK의 정적 분석(스크래핑, 권한, 서명 등)과 선택적으로 Frida 기반 동적 분석을 수행하도록 설계되어 있습니다.
+
+**주요 기능**
+- MobSF API를 사용한 정적 분석 자동화
+- (선택) Frida 스크립트를 이용한 런타임 후킹/로그 수집
+- 분석 결과를 HTML 리포트로 결합
+- Enc/Dec(DEX 의심 파일) 보조 리포트 생성
+
+## 요구사항
+- Python 3.8+
+- 운영체제: Windows / Linux / macOS (일부 스크립트는 Windows 전용 배치/PowerShell 제공)
+- 필수 Python 패키지: `requests`, `tzdata`, `pycryptodome`, `frida-tools` (자세한 내용은 `requirements.txt` 참조)
+- MobSF 서버(정적 분석) 사용 시 `MOBSF_URL` 및 `MOBSF_API_KEY` 필요
+
+## 빠른 시작 (Windows PowerShell)
+1. 의존성 설치
+```powershell
+python -m pip install -r requirements.txt
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/kdt-zerotrust/semi-b-projects/apk-analyzer.git
-git branch -M main
-git push -uf origin main
+
+2. (선택) MobSF를 로컬에서 실행하거나 원격 MobSF 서버를 준비합니다. API Key와 URL을 확인하세요.
+
+3. `run.py`로 간단 분석 실행
+```powershell
+# 환경 변수 방식
+$env:MOBSF_API_KEY = 'your_api_key_here'; $env:MOBSF_URL = 'http://127.0.0.1:8000'
+python .\run.py C:\path\to\sample.apk --verbose
+
+# 또는 CLI 인자로 직접 전달
+python .\run.py C:\path\to\sample.apk --mobsf-url http://127.0.0.1:8000 --mobsf-api-key your_api_key_here --verbose
 ```
 
-## Integrate with your tools
+4. 결과는 기본값으로 `Result/` 디렉터리에 생성됩니다. 로그는 `Log/`에 남습니다.
 
-- [ ] [Set up project integrations](https://gitlab.com/kdt-zerotrust/semi-b-projects/apk-analyzer/-/settings/integrations)
+## 구성 방법
+- 프로젝트 루트에 `config.py`를 추가하면 `run.py` 실행 시 기본 설정으로 사용됩니다. 예시:
 
-## Collaborate with your team
+```python
+class Config:
+		VERBOSE = False
+		DEVICE = 'emulator-5554'
+		MOBSF_URL = 'http://127.0.0.1:8000'
+		MOBSF_API_KEY = 'your_api_key'
+		AAPT_PATH = None
+		KEEP_CACHE = True
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+```
 
-## Test and Deploy
+`run.py`의 CLI 인자는 `config.py`보다 우선합니다.
 
-Use the built-in continuous integration in GitLab.
+## 개발자 가이드
+- 주요 코드 위치
+	- `run.py` — 실행 진입점
+	- `Module/StaticAnalysis.py` — MobSF 통신 및 정적분석 래퍼
+	- `Module/DynamicAnalysis.py` — Frida 기반 동적 분석 로직
+	- `Module/ReportResult.py` — 정적/동적 결과를 합쳐 HTML 리포트 생성
+	- `MobSF/scripts/` — MobSF 관련 유틸 스크립트
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- 안전성 개선: `MobSF/scripts/update_android_permissions.py`에서 `eval` 기반 실행을 제거하고 안전한 모듈 로드 방식으로 교체했습니다.
 
-***
+## 테스트
+- 단위 테스트는 제공되지 않습니다. 수동 테스트 방법:
+	- MobSF 서버와 연동하여 `run.py`로 실제 APK를 분석해 보세요.
+	- 정적 분석만 확인하려면 `MOBSF_URL`/`MOBSF_API_KEY`가 필요합니다.
 
-# Editing this README
+## 기여
+- 이 저장소는 학습/연구 목적으로 사용됩니다. PR은 환영합니다.
+- 주요 변경 전에는 이슈로 제안해 주세요.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## 라이선스
+- 기본 프로젝트 라이선스 파일(`LICENSE`)을 확인하세요.
 
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
+---
+문제가 발견되거나 추가로 개선할 부분(예: 테스트, CI 설정, 보안 스캔)을 진행하길 원하시면 알려주세요.
 ## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
