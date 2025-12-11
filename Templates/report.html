@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>모바일 앱 분석 리포트</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:-apple-system, Segoe UI, Roboto, Arial, sans-serif;margin:24px}
+    .meta{color:#666;margin-top:4px}
+    .card{border:1px solid #ddd;border-radius:10px;padding:16px;margin:16px 0}
+    pre{background:#fafafa;padding:12px;overflow-x:auto}
+    .sev-HIGH{color:#b00020;font-weight:700}
+    .sev-MEDIUM{color:#d35400;font-weight:700}
+    .sev-LOW{color:#2c3e50;font-weight:700}
+    .perm{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  </style>
+</head>
+<body>
+  <h1>모바일 앱 분석 리포트</h1>
+  <div class="meta" id="apk-name"></div>
+
+  <div class="card">
+    <h2>정적 분석</h2>
+    <div id="static-meta"></div>
+    <div id="static-perms"></div>
+    <div id="static-findings"></div>
+  </div>
+
+  <div class="card">
+    <h2>동적 분석</h2>
+    <div id="dynamic-summary"></div>
+    <details>
+      <summary>런타임 로그</summary>
+      <pre id="dynamic-logs"></pre>
+    </details>
+  </div>
+
+  <script id="analysis-data" type="application/json">{{ANALYSIS_JSON}}</script>
+  <script>
+    (function(){
+      function esc(s){ return (s==null?'':String(s)); }
+      const raw = document.getElementById('analysis-data').textContent || '{}';
+      let data = {};
+      try { data = JSON.parse(raw); } catch(e) { console.error('JSON parse error', e); }
+
+      document.getElementById('apk-name').textContent = esc(data.apk || '');
+
+      const meta = (data.static && data.static.apk_meta) || {};
+      const metaDiv = document.getElementById('static-meta');
+      const keys = ['package', 'label', 'sdk', 'targetSdk', 'launchable'];
+      const ul = document.createElement('ul');
+      keys.forEach(k => {
+        const li = document.createElement('li');
+        li.textContent = k + ': ' + esc(meta[k]);
+        ul.appendChild(li);
+      });
+      metaDiv.appendChild(ul);
+
+      const perms = (meta.permissions || []);
+      const permDiv = document.getElementById('static-perms');
+      const h3 = document.createElement('h3'); h3.textContent = `권한 (${perms.length})`;
+      permDiv.appendChild(h3);
+      if (perms.length) {
+        const pre = document.createElement('pre');
+        pre.className = 'perm';
+        pre.textContent = perms.join('\\n');
+        permDiv.appendChild(pre);
+      }
+
+      const findings = (data.static && data.static.findings) || [];
+      const fDiv = document.getElementById('static-findings');
+      if (findings.length){
+        const h3f = document.createElement('h3'); h3f.textContent = '정적 진단 힌트';
+        fDiv.appendChild(h3f);
+        const ul2 = document.createElement('ul');
+        findings.forEach(f => {
+          const li = document.createElement('li');
+          const sev = esc(f.severity || '').toUpperCase();
+          li.innerHTML = `<span class="sev-${sev}">[${sev||'INFO'}]</span> ${esc(f.title)}<br><pre>${esc(f.desc)}</pre>`;
+          ul2.appendChild(li);
+        });
+        fDiv.appendChild(ul2);
+      }
+
+      const d = data.dynamic || {};
+      document.getElementById('dynamic-summary').textContent = esc(d.summary || '');
+      const logs = d.runtime_logs || [];
+      document.getElementById('dynamic-logs').textContent = logs.join('\\n');
+    })();
+  </script>
+</body>
+</html>
