@@ -1,18 +1,3 @@
-# APK Analyzer
-
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
 # KDT APK Analyzer
 
 간단한 APK 정적·동적 분석 도구 모음입니다. 이 저장소는 MobSF(Mobile Security Framework)과 연동하여 APK의 정적 분석(스크래핑, 권한, 서명 등)과 선택적으로 Frida 기반 동적 분석을 수행하도록 설계되어 있습니다.
